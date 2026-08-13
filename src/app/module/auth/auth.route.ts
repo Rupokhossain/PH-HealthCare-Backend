@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import { Role } from "../../../generated/prisma/enums";
 import { auth } from "../../middleware/checkAuth";
 import { AuthController } from "./auth.controller";
-import { LoginvalidationSchema, PatientRegistration } from "./auth.validation";
+import { ForgotPasswordZodSchema, LoginvalidationSchema, PatientRegistration, ResetPasseordZodSchema } from "./auth.validation";
 import { validateRequest } from "../../middleware/validateRequest";
 
 const router = Router();
@@ -49,4 +49,6 @@ router.get(
 );
 router.post("/refresh-token", AuthController.refreshToken);
 router.post("/google", AuthController.googleLogin);
+router.post("/forgot-password", validateRequest(ForgotPasswordZodSchema), AuthController.forgotPassword);
+router.post("/reset-password", validateRequest(ResetPasseordZodSchema), AuthController.resetPassword);
 export const AuthRoutes = router;

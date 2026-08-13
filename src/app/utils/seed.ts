@@ -13,6 +13,7 @@ export const seedSuperAdmin = async () => {
 
     if (isSuperAdminExist) {
       console.log("Super Admin Already Exists!");
+      return;
     }
 
     const name = config.super_admin_name;
@@ -63,6 +64,7 @@ export const seedTesterAdmin = async () => {
 
     if (isTesterAdminExist) {
       console.log("Tester Admin Already Exists!");
+      return;
     }
 
     const name = config.tester_admin_name;
@@ -97,7 +99,7 @@ export const seedTesterAdmin = async () => {
 
     await prisma.user.delete({
       where: {
-        email: config.super_admin_email,
+        email: config.tester_admin_email,
       },
     });
   }
@@ -115,9 +117,9 @@ export const seedTesterDoctor = async () => {
       console.log("Tester Doctor Already Exists!");
     }
 
-    const name = config.tester_admin_name;
-    const email = config.tester_admin_email;
-    const password = config.tester_admin_password;
+    const name = config.tester_doctor_name;
+    const email = config.tester_doctor_email;
+    const password = config.tester_doctor_password;
 
     if (!name || !email || !password) {
       throw new Error(
@@ -135,7 +137,7 @@ export const seedTesterDoctor = async () => {
         name,
         email,
         password: hashedPassword,
-        role: Role.ADMIN,
+        role: Role.DOCTOR,
         needPasswordChange: false,
         emailVerified: true,
       },
