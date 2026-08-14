@@ -436,8 +436,7 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
   }
 
 
-
-  const hashedPassword = await bcrypt.hash(newPassword, config.bcrypt_salt_rounds);
+  const hashedPassword = await bcrypt.hash(newPassword, Number(config.bcrypt_salt_rounds));
 
 
   await prisma.user.update({
@@ -451,7 +450,7 @@ const resetPassword = async (payload: IResetPasswordPayload) => {
 
   await redisClient.del([key]);
 
-  
+
 
 }
 
