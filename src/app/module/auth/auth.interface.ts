@@ -5,6 +5,12 @@ export interface ILoginUserPayload {
   password: string;
 }
 
+export interface IVerifyEmailPayload {
+  email: string;
+  otp: string
+
+}
+
 export interface IRegisterPatientPayload {
   name: string;
   email: string;

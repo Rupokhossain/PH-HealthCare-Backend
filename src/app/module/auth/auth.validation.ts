@@ -22,6 +22,13 @@ export const PatientRegistration = z.object({
     .optional(),
 });
 
+export const PatientEmailVerifyZodSchema = z.object({
+  email: z.email(),
+  otp: z.string().length(6)
+  
+
+});
+
 export const LoginvalidationSchema = z.object({
   email: z.email(),
   password: z

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Forgot Password</title>
+    <title>Email Verification</title>
     <style>
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
@@ -106,13 +106,13 @@
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           </div>
-          <h2>Password Reset Request</h2>
+          <h2>Email Verification Request</h2>
         </div>
 
         <!-- Body Content -->
         <p>Hello <span class="user-name"><%= name %></span>,</p>
-        <p>We received a request to reset your password for your <strong>PH Healthcare System</strong> account.</p>
-        <p style="text-align: center; margin-bottom: 8px; font-weight: 500;">Use the OTP below to complete the reset:</p>
+        <p>We received a request to verify your email <%= email %> <strong>PH Healthcare System</strong> account.</p>
+        <p style="text-align: center; margin-bottom: 8px; font-weight: 500;">Use the OTP below to verify your email:</p>
         
         <!-- OTP Display -->
         <div class="otp-wrapper">
@@ -121,7 +121,7 @@
 
         <!-- Expiration Alert Box -->
         <div class="alert-box">
-          <p><strong>Notice:</strong> This OTP will expire in <strong><%= expirationMinutes %> minutes</strong>. If you did not request this, please ignore this email or secure your account.</p>
+          <p><strong>Notice:</strong> This OTP will expire in <strong><%= expirationSeconds %> minutes</strong>. If you did not request a email verification, please ignore this email.</p>
         </div>
 
         <!-- Footer -->

@@ -2,7 +2,13 @@ import { NextFunction, Request, Response, Router } from "express";
 import { Role } from "../../../generated/prisma/enums";
 import { auth } from "../../middleware/checkAuth";
 import { AuthController } from "./auth.controller";
-import { ForgotPasswordZodSchema, LoginvalidationSchema, PatientRegistration, ResetPasseordZodSchema } from "./auth.validation";
+import {
+  ForgotPasswordZodSchema,
+  LoginvalidationSchema,
+  PatientEmailVerifyZodSchema,
+  PatientRegistration,
+  ResetPasseordZodSchema,
+} from "./auth.validation";
 import { validateRequest } from "../../middleware/validateRequest";
 
 const router = Router();
@@ -38,6 +44,12 @@ router.post(
 );
 
 router.post(
+  "/verify-email",
+  validateRequest(PatientEmailVerifyZodSchema),
+  AuthController.verifyPatientEmail,
+);
+
+router.post(
   "/login",
   validateRequest(LoginvalidationSchema),
   AuthController.loginUser,
@@ -49,8 +61,15 @@ router.get(
 );
 router.post("/refresh-token", AuthController.refreshToken);
 router.post("/google", AuthController.googleLogin);
-router.post("/forgot-password", validateRequest(ForgotPasswordZodSchema), AuthController.forgotPassword);
-router.post("/reset-password", validateRequest(ResetPasseordZodSchema), AuthController.resetPassword);
-
+router.post(
+  "/forgot-password",
+  validateRequest(ForgotPasswordZodSchema),
+  AuthController.forgotPassword,
+);
+router.post(
+  "/reset-password",
+  validateRequest(ResetPasseordZodSchema),
+  AuthController.resetPassword,
+);
 
 export const AuthRoutes = router;
