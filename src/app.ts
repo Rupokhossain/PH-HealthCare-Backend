@@ -13,6 +13,7 @@ import { notFound } from "./app/middleware/notFound";
 import { AuthRoutes } from "./app/module/auth/auth.route";
 import z from "zod";
 import { redisClient } from "./app/lib/redis";
+import { UserRoutes } from "./app/module/user/user.route";
 
 const app: Application = express();
 
@@ -31,6 +32,8 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/v1/auth", AuthRoutes);
+
+app.use("/api/v1/user", UserRoutes);
 
 // Basic route
 

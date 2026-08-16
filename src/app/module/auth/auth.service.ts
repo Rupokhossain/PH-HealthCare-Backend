@@ -130,9 +130,9 @@ const verifyPatientEmail = async (payload: IVerifyEmailPayload) => {
 
   await redisClient.del(otpKey);
 
-  const PatientRegistrationKey = `patient-registration-data:${email}`;
+  const patientRegistrationKey = `patient-registration-data:${email}`;
 
-  const redisPatientData = await redisClient.get(PatientRegistrationKey);
+  const redisPatientData = await redisClient.get(patientRegistrationKey);
 
   if (!redisPatientData) {
     throw new Error("Patient Doesn't Exists");
@@ -158,6 +158,26 @@ const verifyPatientEmail = async (payload: IVerifyEmailPayload) => {
     },
     omit: { password: true },
     include: { patient: true },
+  });
+
+  await redisClient.del(patientRegistrationKey);
+
+  const templatePath = path.join(
+    process.cwd(),
+    "src/app/templates/patient-welcome-email.ejs",
+  );
+
+  const html = await ejs.renderFile(templatePath, {
+    name: createdUser.name,
+  });
+
+  await transporter.sendMail({
+    from: config.email_sender,
+    to: email,
+    subject: "Welcome To PH HealthCare System",
+    // text: `Your OTP is ${otp}`
+    // html: `<h1>Your Password Is Changed</h1>`,
+    html,
   });
 
   const { patient, ...user } = createdUser;
@@ -405,6 +425,24 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
             },
           },
         },
+      });
+
+      const templatePath = path.join(
+        process.cwd(),
+        "src/app/templates/patient-welcome-email.ejs",
+      );
+
+      const html = await ejs.renderFile(templatePath, {
+        name: user.name,
+      });
+
+      await transporter.sendMail({
+        from: config.email_sender,
+        to: user.email,
+        subject: "Welcome To PH HealthCare System",
+        // text: `Your OTP is ${otp}`
+        // html: `<h1>Your Password Is Changed</h1>`,
+        html,
       });
     }
   }
