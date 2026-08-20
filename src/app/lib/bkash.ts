@@ -20,12 +20,12 @@ export const getBkashIdToken = async () => {
     const bkashRefreshTokenTTL = await redisClient.ttl(RefreshTokenKey);
 
 
-    console.log({
-      bkashIdToken,
-      bkashIdTokenTTL,
-      bkashRefreshToken,
-      bkashRefreshTokenTTL
-    })
+    // console.log({
+    //   bkashIdToken,
+    //   bkashIdTokenTTL,
+    //   bkashRefreshToken,
+    //   bkashRefreshTokenTTL
+    // })
 
     // ============================================================
     // STEP 3: Refresh the ID token if it is going to expire soon
