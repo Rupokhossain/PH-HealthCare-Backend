@@ -15,17 +15,31 @@ export const getBkashIdToken = async () => {
     // STEP 2: Get existing tokens and ID token TTL from Redis
     // ============================================================
     let bkashIdToken = await redisClient.get(IdTokenKey);
-    let bkashRefreshToken = await redisClient.get(RefreshTokenKey);
-    let bkashIdTokenTTL = await redisClient.ttl(IdTokenKey);
+    const bkashRefreshToken = await redisClient.get(RefreshTokenKey);
+    const bkashIdTokenTTL = await redisClient.ttl(IdTokenKey);
+    const bkashRefreshTokenTTL = await redisClient.ttl(RefreshTokenKey);
+
+
+    console.log({
+      bkashIdToken,
+      bkashIdTokenTTL,
+      bkashRefreshToken,
+      bkashRefreshTokenTTL
+    })
 
     // ============================================================
     // STEP 3: Refresh the ID token if it is going to expire soon
     //
     // 600 seconds = 10 minutes.
+    // bkash refresh token must exist
     // If the ID token has <= 10 minutes remaining and we have
     // a refresh token, use the refresh token to get a new ID token.
     // ============================================================
-    if (bkashIdTokenTTL <= 600 && bkashRefreshToken) {
+    if (
+      (bkashIdTokenTTL <= 600 || !bkashIdToken) &&
+      bkashRefreshToken &&
+      bkashRefreshTokenTTL > 600
+    ) {
       const refreshTokenResponse = await fetch(
         `${config.bkash_base_url}/tokenized/checkout/token/refresh`,
         {
@@ -47,6 +61,10 @@ export const getBkashIdToken = async () => {
           }),
         },
       );
+
+      if (!refreshTokenResponse.ok) {
+        throw new Error("bKash Access Token Grant Failed");
+      }
 
       const bkashRefreshTokenResult = await refreshTokenResponse.json();
 
@@ -73,7 +91,7 @@ export const getBkashIdToken = async () => {
     //
     // This avoids unnecessary bKash API calls.
     // ============================================================
-    if (bkashIdToken) {
+    if (bkashIdTokenTTL > 600) {
       return bkashIdToken;
     }
 
