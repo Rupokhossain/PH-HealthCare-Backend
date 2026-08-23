@@ -38,7 +38,7 @@ const bookAppointment = async (payload: any, user: RequestUser) => {
           // payerReference: "01770618575", // user email / phone number
           payerReference: user.email,
           callbackURL: `${config.bkash_callback_url}/appointment/book-appointment/payment/callback`,
-          amount: "500",
+          amount: "1200",
           currency: "BDT",
           intent: "sale",
           // merchantInvoiceNumber: "Inv3",  // appointment id
@@ -128,7 +128,7 @@ const payAppointment = async (payload: any, user: RequestUser) => {
         // payerReference: "01770618575", // user email / phone number
         payerReference: user.email,
         callbackURL: `${config.bkash_callback_url}/appointment/book-appointment/payment/callback`,
-        amount: "500",
+        amount: "1200",
         currency: "BDT",
         intent: "sale",
         // merchantInvoiceNumber: "Inv3",  // appointment id
@@ -163,7 +163,7 @@ const payAppointment = async (payload: any, user: RequestUser) => {
 };
 
 // 4th api
-const cancelAppointment = async (payload: any, user: RequestUser) => {
+const cancelAppointment = async (payload: any) => {
   const transactionResult = await prisma.$transaction(async (tx) => {
     const appointmentId = payload.appointmentId;
 
@@ -208,7 +208,7 @@ const cancelAppointment = async (payload: any, user: RequestUser) => {
     }
 
     const bkashRefundPaymentResponse = await fetch(
-      `${config.bkash_base_url}/tokenized-checkout/refund/payment/transaction`,
+      `${config.bkash_base_url}/tokenized/checkout/payment/refund`,
       {
         method: "POST",
         headers: {
@@ -218,25 +218,43 @@ const cancelAppointment = async (payload: any, user: RequestUser) => {
           "X-App-Key": config.bkash_api_key,
         },
         body: JSON.stringify({
-          paymentId: existingAppointment.payment?.appointmentId,
-          trxId: existingAppointment.payment?.bkashTrxId,
-          refundAmount: existingAppointment.payment?.amount,
-          reason: "Payment Cancelled The Appointment",
+          paymentID: existingAppointment.payment?.bkashPaymentId,
+          trxID: existingAppointment.payment?.bkashTrxId,
+          amount: existingAppointment.payment?.amount.toString(),
+          sku: "Appointment Cancelletion",
+          reason: "Paitent Cancelled The Appointment",
         }),
       },
     );
 
+    // console.log({
+    //   paymentID: existingAppointment.payment?.bkashPaymentId,
+    //   trxID: existingAppointment.payment?.bkashTrxId,
+    //   amount: existingAppointment.payment?.amount,
+    //   amountString: existingAppointment.payment?.amount?.toString(),
+    // });
+
     const bkashRefundPaymentResult = await bkashRefundPaymentResponse.json();
+
+    console.log("Refund Response:", bkashRefundPaymentResult);
+
+    if (bkashRefundPaymentResult.statusCode !== "0000") {
+      throw new Error(
+        bkashRefundPaymentResult.statusMessage || "Refund Failed",
+      );
+    }
 
     const updatePayment = await tx.payment.update({
       where: {
         appointmentId: existingAppointment.id,
       },
       data: {
-        refundTrxId: bkashRefundPaymentResult.refundTrxId,
+        refundTrxId: bkashRefundPaymentResult.refundTrxID,
         refundedAt: bkashRefundPaymentResult.completedTime,
-        refundAmount: bkashRefundPaymentResult.refundAmount,
-        refundReason: bkashRefundPaymentResult.reason,
+        refundAmount: bkashRefundPaymentResult.amount,
+        refundReason: "Paitent Cancelled The Appointment",
+        status: PaymentStatus.REFUNDED,
+        gateWayResponse: bkashRefundPaymentResult,
       },
     });
 
@@ -361,5 +379,6 @@ const bookiAppointmentCallback = async (query: Record<string, any>) => {
 export const AppointementServices = {
   bookAppointment,
   payAppointment,
+  cancelAppointment,
   bookiAppointmentCallback,
 };
