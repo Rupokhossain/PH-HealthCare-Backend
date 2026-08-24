@@ -3,6 +3,7 @@ import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
 import httpStatus from "http-status";
 import { DoctorServices } from "./doctor.service";
+import { ApplyDoctorValidationZodSchema } from "./doctor.validation";
 
 const applyAsDoctor = catchAsync(async (req: Request, res: Response) => {
   // const resume = req.file;
@@ -16,13 +17,13 @@ const applyAsDoctor = catchAsync(async (req: Request, res: Response) => {
   const resume = files?.["resume"] ? files["resume"][0] : null;
   const additionalFiles = files?.["additionalFiles"] || [];
 
-  //   const data = req.body.data;
   const data = JSON.parse(req.body.data);
 
-  console.log({ resume, additionalFiles, data });
+  const validatedData = ApplyDoctorValidationZodSchema.parse(data);
+  console.log({ resume, additionalFiles, validatedData });
 
   const result = await DoctorServices.applyDoctor(
-    data,
+    validatedData,
     resume,
     additionalFiles,
   );

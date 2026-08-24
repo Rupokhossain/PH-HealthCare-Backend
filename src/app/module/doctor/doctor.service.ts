@@ -87,7 +87,16 @@ const applyDoctor = async (
         create: {
           name: payload.user.name,
           email: payload.user.email,
-          ...payload,
+
+          address: payload.address,
+          specialization: payload.specialization,
+          licenseNumber: payload.licenseNumber,
+          qualifications: payload.qualifications,
+          experienceYears: payload.experienceYears,
+          bio: payload.bio,
+          consultationFee: payload.consultationFee,
+          contactNumber: payload.contactNumber,
+
           resume: resumeUploadResult.secure_url,
           resumePublicId: resumeUploadResult.public_id,
 
@@ -98,8 +107,11 @@ const applyDoctor = async (
         },
       },
     },
-  });
 
+    include: {
+      doctor: true,
+    },
+  });
   return doctorApplication;
 };
 
