@@ -236,13 +236,13 @@ const cancelAppointment = async (payload: any) => {
 
     const bkashRefundPaymentResult = await bkashRefundPaymentResponse.json();
 
-    console.log("Refund Response:", bkashRefundPaymentResult);
+    // console.log("Refund Response:", bkashRefundPaymentResult);
 
-    if (bkashRefundPaymentResult.statusCode !== "0000") {
-      throw new Error(
-        bkashRefundPaymentResult.statusMessage || "Refund Failed",
-      );
-    }
+    // if (bkashRefundPaymentResult.statusCode !== "0000") {
+    //   throw new Error(
+    //     bkashRefundPaymentResult.statusMessage || "Refund Failed",
+    //   );
+    // }
 
     const updatePayment = await tx.payment.update({
       where: {

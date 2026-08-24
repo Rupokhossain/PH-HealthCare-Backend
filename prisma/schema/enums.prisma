@@ -22,7 +22,6 @@ enum AuthProvider {
   CREDENTIAL
 }
 
-
 enum AppointmentStatus {
   PENDING
   CONFIRMED
@@ -30,7 +29,6 @@ enum AppointmentStatus {
   ONGONING
   COMPLETED
 }
-
 
 enum PaymentStatus {
   UNPAID
@@ -40,3 +38,8 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum DoctorVerficationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
