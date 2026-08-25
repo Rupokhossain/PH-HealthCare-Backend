@@ -94,6 +94,8 @@ const registerPatient = async (payload: IRegisterPatientPayload) => {
     // html: `<h1>Your Password Is Changed</h1>`,
     html,
   });
+
+  
 };
 
 const verifyPatientEmail = async (payload: IVerifyEmailPayload) => {
