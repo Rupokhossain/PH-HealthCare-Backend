@@ -4,6 +4,8 @@ import { RequestUser } from "../../middleware/checkAuth";
 import { AppError } from "../../utils/AppError";
 import { ICreateSchedulePayload } from "./schedule.interface";
 import httpStatus from "http-status";
+import { IQuery } from "../../interfaces";
+import { ScheduleWhereInput } from "../../../generated/prisma/models";
 
 const createSchedule = async (
   payload: ICreateSchedulePayload,
@@ -29,8 +31,8 @@ const createSchedule = async (
       doctorId: doctor.id,
       isDeleted: false,
       startDateTime: {
-        gte: startOfTheDay,
-        lt: startOfNextDay,
+        gte: startOfTheDay, // Greater Than or Equal
+        lt: startOfNextDay, // Less Than
       },
     },
   });
@@ -71,11 +73,52 @@ const createSchedule = async (
     },
   });
 
-  return schedule
+  return schedule;
 };
 
+const getMySchedules = async (query: IQuery, user: RequestUser) => {
+  const limit = query.limit ? Number(query.limit) : 10;
+  const page = query.page ? Number(query.page) : 1;
+  const skip = (page - 1) * limit;
+  const sortBy = query.sortBy ? query.sortBy : "createdAt";
+  const sortOrder = query.sortOrder ? query.sortOrder : "desc";
 
+  const doctor = await prisma.doctor.findUnique({
+    where: {
+      userId: user.userId,
+    },
+  });
+
+  if (!doctor) {
+    throw new AppError(httpStatus.NOT_FOUND, "Doctor Profile Not Found");
+  }
+
+      // let limit = 10;
+    // if (query.limit) {
+    //     limit = Number(query.limit);
+    // }
+
+    // let page = 1;
+    // if (query.page) {
+    //     page = Number(query.page);
+    // }
+
+    // const skip = (page - 1) * limit;
+
+
+    const andCondition: ScheduleWhereInput[] = [
+      {
+        doctorId: doctor.id
+      },
+      {
+        isDeleted: false
+      }
+    ]
+
+
+};
 
 export const ScheduleService = {
-    createSchedule
-}
+  createSchedule,
+  getMySchedules,
+};
