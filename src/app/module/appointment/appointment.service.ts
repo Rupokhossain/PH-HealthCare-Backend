@@ -1,4 +1,4 @@
-import { isBefore, isSameDay } from "date-fns";
+import { addMinutes, isBefore, isSameDay } from "date-fns";
 import {
   AppointmentStatus,
   PaymentStatus,
@@ -10,9 +10,13 @@ import { prisma } from "../../lib/prisma";
 import { RequestUser } from "../../middleware/checkAuth";
 import { AppError } from "../../utils/AppError";
 import httpStatus from "http-status";
+import { IBookAppointmentPayload } from "./appointment.interface";
 
 // 1st api create
-const bookAppointment = async (payload: any, user: RequestUser) => {
+const bookAppointment = async (
+  payload: IBookAppointmentPayload,
+  user: RequestUser,
+) => {
   const transactionResult = await prisma.$transaction(async (tx) => {
     const patient = await prisma.patient.findUnique({
       where: {
@@ -46,6 +50,7 @@ const bookAppointment = async (payload: any, user: RequestUser) => {
 
     const now = new Date();
 
+    // Current date এবং schedule-এর date কি একই?
     if (!isSameDay(now, schedule.startDateTime)) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
@@ -53,6 +58,7 @@ const bookAppointment = async (payload: any, user: RequestUser) => {
       );
     }
 
+    //Schedule-এর start time পার হয়ে গেলে appointment book করা যাবে না।
     if (!isBefore(now, schedule.startDateTime)) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
@@ -67,6 +73,7 @@ const bookAppointment = async (payload: any, user: RequestUser) => {
     // 	);
     // }
 
+    //আগের appointment আছে কিনা
     const existingAppointment = await prisma.appointment.findFirst({
       where: {
         patientId: patient.id,
@@ -442,12 +449,54 @@ const bookiAppointmentCallback = async (query: Record<string, any>) => {
     console.log({ executedPaymentResponse });
 
     if (status === "success") {
+      const appointment = await prisma.appointment.findUnique({
+        where: {
+          id: executedPaymentResult.merchantInvoiceNumber,
+        },
+        include: {
+          schedule: true,
+          patient: true,
+          doctor: true,
+        },
+      });
+
+      if (!appointment) {
+        throw new AppError(httpStatus.NOT_FOUND, "Appointment Not Found!");
+      }
+
+      // total slot = 3 , available slot = 2
+      // (total - available) + 1
+
+      const alreadyBookedSlots =
+        appointment.schedule.totalSlots - appointment.schedule.availableSlots;
+
+      const serialNumber = alreadyBookedSlots + 1;
+
+      // 25 August => 3:00 PM - 4:00 PM
+      // 1st person joining time => startDateTime = 2026-08-25T15:00:00.436Z => 3:00 PM
+      // serial number (1) - 1 * 20 => 0 minues
+
+      // 2nd person joining time => startDateTime = 2026-08-25T15:20:00.436Z => 3:00 PM
+      // serial number (2) - 1 * 20 => 20 minutes
+
+      // 3nd person joining time => startDateTime = 2026-08-25T15:40:00.436Z => 3:00 PM
+      // serial number (3) - 1 * 20 => 40 mintes
+
+
+      const joiningTime = addMinutes(
+        appointment.schedule.startDateTime,
+        (serialNumber - 1) * 20
+      )
+
+
       await tx.appointment.update({
         where: {
           id: executedPaymentResult.merchantInvoiceNumber,
         },
         data: {
           status: AppointmentStatus.CONFIRMED,
+          joiningTime,
+          serialNumber
         },
       });
 
