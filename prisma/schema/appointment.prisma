@@ -8,6 +8,9 @@ model Appointment {
   recordUrl      String?
   recordPublicId String?
 
+  prescriptionUrl      String?
+  prescriptionPublicId String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

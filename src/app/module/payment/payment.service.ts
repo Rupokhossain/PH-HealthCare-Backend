@@ -1,3 +1,4 @@
+import { Role } from "../../../generated/prisma/enums";
 import { PaymentWhereInput } from "../../../generated/prisma/models";
 import { IQuery } from "../../interfaces";
 import { prisma } from "../../lib/prisma";
@@ -145,10 +146,25 @@ const getSinglePayment = async (paymentId: string, user: RequestUser) => {
       },
     },
   });
+
+  if (!payment) {
+    throw new AppError(httpStatus.NOT_FOUND, "Payment Not Found");
+  }
+
+  if (user.role === Role.PATIENT) {
+    if (payment.appointment.patient.userId !== user.userId) {
+      throw new AppError(
+        httpStatus.FORBIDDEN,
+        "You Are Not Allowed To View This Payment",
+      );
+    }
+  }
+
+  return payment;
 };
 
 export const PaymentServices = {
   getMyPayments,
-  // getAllPayments,
-  // getSinglePayment
+  getAllPayments,
+  getSinglePayment
 };
