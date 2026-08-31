@@ -1,13 +1,48 @@
 import { Router } from "express";
-import { AppointementController } from "./appointment.controller";
+
 import { auth } from "../../middleware/checkAuth";
 import { Role } from "../../../generated/prisma/enums";
+import { AppointmentController } from "./appointment.controller";
+import { UpdateAppointmentStatusValidationZodSchema } from "./appointment.validation";
+import { validateRequest } from "../../middleware/validateRequest";
 
 const router = Router();
 
-router.post("/book-appointment", auth(Role.PATIENT), AppointementController.bookAppointment)
-router.post("/pay-appointment", auth(Role.PATIENT), AppointementController.payAppointment)
-router.post("/cancel-appointment", auth(Role.PATIENT, Role.ADMIN, Role.SUPER_ADMIN), AppointementController.cancelAppointment)
+router.post("/book-appointment", auth(Role.PATIENT), AppointmentController.bookAppointment)
+router.post("/pay-appointment", auth(Role.PATIENT), AppointmentController.payAppointment)
+router.post("/cancel-appointment", auth(Role.PATIENT, Role.ADMIN, Role.SUPER_ADMIN), AppointmentController.cancelAppointment)
 
-router.get("/book-appointment/payment/callback", AppointementController.bookiAppointmentCallback)
-export const AppointementRoutes = router;
+router.get("/book-appointment/payment/callback", AppointmentController.bookiAppointmentCallback)
+
+router.patch(
+	"/update-status/:appointmentId",
+	auth(Role.DOCTOR),
+	validateRequest(UpdateAppointmentStatusValidationZodSchema),
+	AppointmentController.updateAppointmentStatus,
+);
+
+router.get(
+	"/my-appointments",
+	auth(Role.PATIENT),
+	AppointmentController.getMyAppointments,
+);
+
+router.get(
+	"/doctor-appointments",
+	auth(Role.DOCTOR),
+	AppointmentController.getDoctorAppointments,
+);
+
+router.get(
+	"/all-appointments",
+	auth(Role.ADMIN, Role.SUPER_ADMIN),
+	AppointmentController.getAllAppointments,
+);
+
+router.get(
+	"/:appointmentId",
+	auth(Role.PATIENT, Role.DOCTOR, Role.ADMIN, Role.SUPER_ADMIN),
+	AppointmentController.getSingleAppointment,
+);
+
+export const AppointmentRoutes = router;
