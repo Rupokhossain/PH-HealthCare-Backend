@@ -17,7 +17,7 @@ export const PatientRegistration = z.object({
   patient: z
     .object({
       contactNumber: z.string().optional(),
-      age: z.number(),
+      age: z.number().optional(),
     })
     .optional(),
 });

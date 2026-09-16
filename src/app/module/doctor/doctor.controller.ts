@@ -24,7 +24,7 @@ const applyAsDoctor = catchAsync(async (req: Request, res: Response) => {
 
 	const payload = zodValidationResult.data;
 
-	const result = await DoctorServices.applyAsDoctor(
+	const result = await DoctorServices.applyDoctor(
 		payload,
 		resume,
 		additionalFiles,
@@ -36,6 +36,7 @@ const applyAsDoctor = catchAsync(async (req: Request, res: Response) => {
 		data: result,
 	});
 });
+
 const verifyDoctorEmail = catchAsync(async (req: Request, res: Response) => {
 	
 	const payload = req.body;
@@ -48,6 +49,8 @@ const verifyDoctorEmail = catchAsync(async (req: Request, res: Response) => {
 		data: result,
 	});
 });
+
+
 const approveDoctor = catchAsync(async (req: Request, res: Response) => {
 	
 	const payload = req.body;
@@ -61,6 +64,8 @@ const approveDoctor = catchAsync(async (req: Request, res: Response) => {
 		data: result,
 	});
 });
+
+
 const getAllDoctors = catchAsync(async (req: Request, res: Response) => {
 	
 
@@ -73,6 +78,7 @@ const getAllDoctors = catchAsync(async (req: Request, res: Response) => {
 		meta : meta,
 	});
 });
+
 const updateDoctorProfile = catchAsync(
 	async (req: Request, res: Response) => {
 		const payload = req.body;

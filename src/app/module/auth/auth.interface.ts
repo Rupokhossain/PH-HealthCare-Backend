@@ -31,6 +31,11 @@ export interface IGoogleLoginPayload {
   idToken: string;
 }
 
+export interface IGoogleLoginPayload {
+  token: string;
+}
+
+
 
 export interface IForgotPasswordPayload {
   email: string
