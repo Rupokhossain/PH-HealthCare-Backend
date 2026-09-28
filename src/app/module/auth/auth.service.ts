@@ -61,7 +61,7 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
     where: { email },
   });
 
-  if (!user) {
+    if (!user) {
     const defaultPassword = crypto.randomBytes(16).toString("hex");
     const hashedPassword = await bcrypt.hash(
       defaultPassword,
@@ -76,6 +76,13 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
         role: Role.PATIENT,
         emailVerified: true,
         authProvider: "GOOGLE",
+        // ✅ Patient প্রোফাইল সাথে সাথে তৈরি হবে:
+        patient: {
+          create: {
+            name: name || "Google User",
+            email: email,
+          },
+        },
       },
     });
   } else {
@@ -85,8 +92,24 @@ const googleLogin = async (payload: IGoogleLoginPayload) => {
         "Please login with your email and password!",
       );
     }
-  }
 
+    // ✅ অলরেডি তৈরি ইউজারের যদি patient প্রোফাইল না থাকে তবে তৈরি করা:
+    const isPatientExists = await prisma.patient.findFirst({
+      where: {
+        OR: [{ userId: user.id }, { email: user.email }],
+      },
+    });
+
+    if (!isPatientExists && user.role === Role.PATIENT) {
+      await prisma.patient.create({
+        data: {
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    }
+  }
   const jwtPayload = {
     userId: user.id,
     email: user.email,

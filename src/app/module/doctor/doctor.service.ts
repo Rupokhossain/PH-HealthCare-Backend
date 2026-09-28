@@ -258,7 +258,7 @@ const approveDoctor = async (
   const updatedDoctor = await prisma.doctor.update({
     where: { id: doctorId },
     data: {
-      verificationStatus,
+      verficationStatus: verificationStatus,
       rejectionReason:
         verificationStatus === DoctorVerficationStatus.REJECTED
           ? rejectionReason
@@ -613,33 +613,47 @@ const getAllDoctorsListPublic = async (query: IQuery) => {
 };
 
 
+// ✅ এই সম্পূর্ণ কোডটুকু দিয়ে রিপ্লেস করুন:
 const getSingleDoctorPublicProfile = async (doctorId: string) => {
+  const doctor = await prisma.doctor.findFirst({
+    where: {
+      id: doctorId,
+      isDeleted: false,
+      verficationStatus: DoctorVerficationStatus.APPROVED,
+    },
+    select: {
+      id: true,
+      name: true,
+      specialization: true,
+      licenseNumber: true,
+      qualifications: true,
+      experienceYears: true,
+      bio: true,
+      consultationFee: true,
+      createdAt: true,
 
-	const doctor = await prisma.doctor.findUnique({
-		where: {
-			id: doctorId,
-			isDeleted: false,
-			verificationStatus: DoctorVerficationStatus.APPROVED,
-		},
-		select: {
-			id: true,
-			name: true,
-			specialization: true,
-			licenseNumber: true,
-			qualifications: true,
-			experienceYears: true,
-			bio: true,
-			consultationFee: true,
-			createdAt: true,
-		},
-	});
+      schedules: {
+        where: {
+          isDeleted: false,
+          status: ScheduleStatus.PUBLISHED,
+        },
+        select: {
+          id: true,
+          startDateTime: true,
+          endDateTime: true,
+          availableSlots: true,
+          totalSlots: true,
+        },
+      },
+    },
+  });
 
-	if (!doctor) {
-		throw new AppError(httpStatus.NOT_FOUND, "Doctor Not Found");
-	}
+  if (!doctor) {
+    throw new AppError(httpStatus.NOT_FOUND, "Doctor Not Found");
+  }
 
-	return doctor;
-}
+  return doctor;
+};
 
 
 export const DoctorServices = {

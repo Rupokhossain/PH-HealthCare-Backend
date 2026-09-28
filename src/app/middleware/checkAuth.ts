@@ -5,6 +5,8 @@ import config from "../config";
 import { prisma } from "../lib/prisma";
 import { catchAsync } from "../utils/catchAsync";
 import { jwtUtils } from "../utils/jwt";
+import { AppError } from "../utils/AppError";
+import httpStatus from "http-status"
 
 export interface RequestUser {
 	email: string;
@@ -31,11 +33,9 @@ export const auth = (...requiredRoles: Role[]) => {
 				? req.headers.authorization?.split(" ")[1]
 				: req.headers.authorization;
 
-		if (!token) {
-			throw new Error(
-				"You are not logged in. Please log in to access this resource.",
-			);
-		}
+if (!token) {
+  throw new AppError(httpStatus.UNAUTHORIZED, "You are not logged in. Please log in to access this resource.");
+}
 
 		const verifiedToken = jwtUtils.verifyToken(token, config.jwt_access_secret);
 

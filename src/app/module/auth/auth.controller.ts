@@ -10,17 +10,26 @@ const googleLogin = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.googleLogin(req.body);
   const { refreshToken, accessToken } = result;
 
-  res.cookie('refreshToken', refreshToken, {
-     httpOnly: true,
+  // ✅ ১. accessToken কুকি যোগ করুন (আপনার loginUser এ যেভাবে আছে)
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
     secure: config.node_env === "development" ? false : true,
     sameSite: config.node_env === "development" ? "lax" : "none",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 1000 * 60 * 60 * 24, // ১ দিন (অথবা আপনার jwt config অনুযায়ী)
+  });
+
+  // ✅ ২. refreshToken কুকি
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: config.node_env === "development" ? false : true,
+    sameSite: config.node_env === "development" ? "lax" : "none",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // ৭ দিন
   });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: 'Google login successful!',
+    message: "Google login successful!",
     data: {
       accessToken,
     },

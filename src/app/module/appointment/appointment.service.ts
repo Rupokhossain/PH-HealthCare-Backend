@@ -28,16 +28,38 @@ const bookAppointment = async (
   user: RequestUser,
 ) => {
   const transactionResult = await prisma.$transaction(async (tx) => {
-    const patient = await prisma.patient.findUnique({
+    // ✅ ১. পেশেন্ট খোঁজা (userId অথবা email দিয়ে)
+    let patient = await tx.patient.findFirst({
       where: {
-        userId: user.userId,
+        OR: [
+          { userId: user.userId },
+          { email: user.email },
+        ],
       },
     });
-
+    // ✅ ২. গুগল লগইনের কারণে পেশেন্ট প্রোফাইল না থাকলে অটো-তৈরি করে নেওয়া
     if (!patient) {
-      throw new AppError(httpStatus.NOT_FOUND, "Patient Profile Not Found");
+      const userData = await tx.user.findUnique({
+        where: { id: user.userId },
+      });
+      if (userData && userData.role === Role.PATIENT) {
+        patient = await tx.patient.create({
+          data: {
+            userId: userData.id,
+            name: userData.name,
+            email: userData.email,
+          },
+        });
+      } else {
+        throw new AppError(httpStatus.NOT_FOUND, "Patient Profile Not Found");
+      }
+    } else if (!patient.userId) {
+      // যদি আগে তৈরি হয়ে থাকে কিন্তু userId লিংক না থাকে
+      patient = await tx.patient.update({
+        where: { id: patient.id },
+        data: { userId: user.userId },
+      });
     }
-
     const schedule = await prisma.schedule.findUnique({
       where: {
         id: payload.scheduleId,
@@ -60,22 +82,13 @@ const bookAppointment = async (
 
     const now = new Date();
 
-    // Current date এবং schedule-এর date কি একই?
-    if (!isSameDay(now, schedule.startDateTime)) {
+    // ✅ সঠিক লজিক: শিডিউলের সময়টি যদি বর্তমান সময়ের চেয়ে অতীতে হয় (পার হয়ে গিয়ে থাকে)
+    if (isBefore(new Date(schedule.startDateTime), now)) {
       throw new AppError(
         httpStatus.BAD_REQUEST,
         "This Schedule Has Already Started",
       );
     }
-
-    //Schedule-এর start time পার হয়ে গেলে appointment book করা যাবে না।
-    if (!isBefore(now, schedule.startDateTime)) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "This Schedule Has Already Started",
-      );
-    }
-
     // if(isAfter(now, schedule.startDateTime)){
     // 	throw new AppError(
     // 		httpStatus.BAD_REQUEST,
@@ -92,11 +105,18 @@ const bookAppointment = async (
       },
     });
 
+    // ✅ যদি আগের পেন্ডিং (আনপেইড) অ্যাপয়েন্টমেন্ট থাকে, সেটি ক্লিয়ার করে ফ্রেশ পেমেন্ট শুরু করবে
     if (existingAppointment?.status === AppointmentStatus.PENDING) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "You Already Have A Pending Appointment. Please Pay For That",
-      );
+      await tx.payment.deleteMany({
+        where: {
+          appointmentId: existingAppointment.id,
+        },
+      });
+      await tx.appointment.delete({
+        where: {
+          id: existingAppointment.id,
+        },
+      });
     }
     if (existingAppointment?.status === AppointmentStatus.CONFIRMED) {
       throw new AppError(
